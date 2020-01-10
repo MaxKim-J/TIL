@@ -23,6 +23,63 @@ console.log('Hello Again');
 - 그전에 `console.log('Hello Again')`은 미리 실행됨
 - 비동기 실행이 끝나고 난 후 바로 콜백함수 실행 가능
 
+### JS 엔진의 비동기 로직 처리 프로세스
+- 자바스크립트 엔진은 기본적으로 하나의 쓰레드에서 동작
+- 하나의 쓰레드를 가지고 있다는 것 = 하나의 스택 = 동시에 단 하나의 작업만을 할 수 있음
+- `web API`에서 비동기적으로 이벤트를 처리하거나, Ajax 통신을 하게 됨
+- `Event Loop`과 `Queue`를 이용해서 비동기 작업을 함
+
+#### 이벤트 루프와 큐
+이벤트 루프가 하는 일: 콜스택과 큐 사이의 작업들을 확인, 콜스택이 비워있는 경우 큐에서 작업을 꺼내서 콜스택에 넣는다.  
+자바스크립트 엔진이 하나의 코드 조각을 하나씩 처리할 수 있도록 작업을 스케쥴하는 동시에 + 비동기 처리도 함  
+
+#### 동기+비동기 로직 처리순서
+
+```javascript
+//1 - 콘솔로그
+console.log("script start");
+
+//2 - 셋타임아웃(비동기)
+setTimeout(function() {
+  console.log("setTimeout");
+}, 0);
+
+//3 - 프로미스(비동기)
+Promise.resolve().then(function() {
+  console.log("promise1");
+}).then(function() {
+  console.log("promise2");
+});
+
+//4 - 콘솔로그
+console.log("script end");
+```
+이 로직의 실행 결과는
+```javascript
+script start
+script end
+promise1
+promise2
+requestAnimationFrame
+setTimeout
+```
+**실제 처리 순서**
+1. 전역 컨텍스트 콜스택에 등록
+2. console.log('script start')
+3. 셋타임아웃 작업이 stack에 등록되고, web API에 setTimeout을 요청. 이때 셋타임아웃의 콜백 함수를 함께 전달. 요청 이후 stack의 settimeout은 제거
+4. web api는 setTimeOut의 작업이 완료되면 setTimeout callback함수를 task queue에 등록한다.
+5. 프로미스 작업이 stack에 등록되고 web api에 프로미스 작업 요청, 이때 then의 콜백 함수를 함께 전달, web api에서 프로미스 작업 완료되면 콜백함수를 큐에 등록
+6. console.log('script end')
+7. **스택이 비워져 있으니** 큐의 작업들 수행이 시작된다. 먼저 프로미스의 콜백함수가 실행되어 console.log("promise1")이 처리됨
+8. 첫번째 then 다음 then이 있다면 그 callback을 큐에 등록함 + 스택에서 첫번째 then 콜백 처리
+9. 두번째 then 콜백 스택에서 처리 + settimeout 스택에 등록
+10. 셋타임아웃의 콜백 처리 + 스택에서 지워짐
+
+#### 비동기 작업의 종류
+1. task 큐: 비동기 작업이 순차적으로 수행될 수 있도록 보장하는 형태의 작업 유형(setTimeout)
+2. Microtask 큐: 비동기 작업이 현재 실행되는 스크립트 바로 다음에 일어나는 작업. task보다 먼저 실행된다 (Promise)
+
+
 ### 콜백함수
 - 다른 함수의 인수로 넘기는 함수
 - 특정 비동기 로직 시행 후 바로 실행되는 로직
@@ -209,6 +266,7 @@ requestData1()
 - [캡틴판교 - 자바스크립트 비동기 처리와 콜백 함수](https://joshua1988.github.io/web-development/javascript/javascript-asynchronous-operation/)
 - [자바스크립트로 만나는 세상 - 비동기 프로그래밍](https://helloworldjavascript.net/pages/285-async.html#fn_6)
 - [실전 리액트 프로그래밍 - 2.4 향상된 비동기 프로그래밍1:프로미스](http://www.yes24.com/Product/Goods/74223605?scode=032&OzSrank=1)
+- [자바스크립트 비동기 처리 과정과 RxJs Scheduler](http://sculove.github.io/blog/2018/01/18/javascriptflow/)
 
 
 
