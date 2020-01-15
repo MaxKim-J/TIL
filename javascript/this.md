@@ -22,7 +22,7 @@ console.log(this === global) // true
 - 전역변수를 선언하면 자스엔진은 이를 **전역객체의 프로퍼티**로 할당
 - 변수이면서 객체의 프로퍼티인 경우가 됨
 ```javascript
-let a = 1;
+var a = 1;
 console.log(a); //1
 console.log(window.a); //1
 console.log(this.a) //1
@@ -30,9 +30,9 @@ console.log(this.a) //1
 **자바스크립트의 모든 변수는 특정 객체의 프로퍼티로서 동작**함. 변수를 선언하더라도 실제 엔진은 어떤 특정 객체의 프로퍼티로 인식함   
 특정 객체 == 실행 컨텍스트의 `lexical environment`=>스코프 때랑 비슷하게 le의 프로퍼티로 변수를 저장, 조회에서 일치할 경우 반환  
 정확한 표현 : 전역변수를 선언하면 자바스크립트 엔진은 이를 전역객체의 프로퍼티로 할당한다
-- 전역공간에서는 let으로 변수를 선언하는 대신 window의 프로퍼티에 직접 할당하더라도 결과적으로 let으로 선언한 것과 똑같이 동작한다
+- 전역공간에서는 var으로 변수를 선언하는 대신 window의 프로퍼티에 직접 할당하더라도 결과적으로 var으로 선언한 것과 똑같이 동작한다(**[let은 다르다]()**)
 ```javascript
-let a = 1;
+var a = 1;
 window.b = 2;
 console.log(a, window.a, this.a); // 1 1 1
 console.log(b, window.b, this.b); // 2 2 2
@@ -121,7 +121,7 @@ obj.outer();
 ```
 
 #### this 바인딩하지 않는 함수
-- **화살표 함수**를 쓰면 this를 바인딩하지 않는다 (이거 나중에 중요할거같은데...)
+- [화살표 함수](arrowFunction.md)를 쓰면 this를 바인딩하지 않는다 (이거 나중에 중요할거같은데...)
 - 함수 내부에서 this가 전역객체를 바라보는 문제를 보완
 ```javascript
 let obj = {
@@ -138,7 +138,8 @@ obj.outer();
 
 ### 콜백함수 호출시 내부에서의 this
 - 콜백함수도 함수이기때무네.... 기본적으로 this가 전역객체를 참조하지만, 제어권을 받은 함수에서 콜백함수에 별도로 this가 될 대상을 지정하면 그 대상을 참조
-- 애매함. 무조건 이거다! 라고 정의하기 힘들지만, 콜백함수의 제어건을 가지는 함수가 콜백 함수에서의 this를 무엇으로 할지 결정, 특별히 정의하지 않은 경우에는 기본적으로 함수와 마찬가지로 전역객체를 바라본다
+- 애매함. 무조건 이거다! 라고 정의하기 힘들지만, 콜백함수의 제어권을 가지는 함수가 콜백 함수에서의 this를 무엇으로 할지 결정, 특별히 정의하지 않은 경우에는 기본적으로 함수와 마찬가지로 전역객체를 바라본다
+
 ```javascript
 // setTimeout 함수는 지연시간 가진 후 콜백함수를 실행하라는 명령, 전역객체에 바인딩
 setTimeout(function() { console.log(this);} ), 300);
@@ -153,6 +154,7 @@ document.body.innerHTML += '<button id = "a">클릭</button>'
 document.body.querySelector('#a')
   .addEventListner('click', function(e){
     console.log(this, e);
+    // 여기서 this는 #a 엘리먼트, 화살표 함수가 아닌 function 키워드로 만들어야 이 this가 먹는다
   });
 ```
 ### 생성자 함수 내부에서의 this
@@ -183,6 +185,9 @@ Cat {...}
 Cat {...}
 */
 ```
+
+## 명시적 this 바인딩
+
 
 ## Reference
 - [코어 자바스크립트 - this](http://www.yes24.com/Product/Goods/78586788?scode=032&OzSrank=1)

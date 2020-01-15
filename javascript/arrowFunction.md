@@ -118,11 +118,16 @@ const foo = new Foo(); // TypeError: Foo is not a constructor
 addEventListner의 콜백함수 안의 this가 이벤트 리스너에 바인딩된 요소(currentTarget)을 가리키게 하려면 화살표 함수를 쓰면 안된다  
 화살표 함수로 콜백 선언하면 상위 컨택스트인 전역 객체를 가리킴
 ```javascript
-// Bad
+
 var button = document.getElementById('myButton');
 
 button.addEventListener('click', () => {
   console.log(this === window); // => true
+  this.innerHTML = 'Clicked button';
+});
+
+button.addEventListener('click', function() {
+  console.log(this === button); // => true
   this.innerHTML = 'Clicked button';
 });
 ```
