@@ -187,7 +187,101 @@ Cat {...}
 ```
 
 ## 명시적 this 바인딩
+this에 별도의 대상을 바인딩하여 사용하는 방법
 
+### call
+메서드의 호출 주체인 함수를 즉시 실행하도록 하는 명령  
+첫번째 인자를 this로 바인딩하고, 이후 인자들을 호출할 함수의 매개변수로 만듬  
+함수를 그냥 실행하면 this는 전역객체를 참조 but call메서드 이용하면 임의의 객체 this로 지정 가능  
+생성자에서 다른 생성자의 this를 바인딩해서 오버라이딩할때도 사용
+```javascript
+var func = function(a,b,c) {
+  console.log(this,a,b,c);
+} 
+
+// 첫인자 this가 될 객체, 나머지 인자는 함수의 파라미터
+func.call({x:1}, 4,5,6);
+
+function Person(name, gender) {
+  this.name = name
+  this.gender = gender
+}
+
+function Student(name, gender, school) {
+  //Person에 Student 생성자의 this를 바인딩
+  Person.call(this, name, gender);
+  this.school = school
+}
+```
+
+### apply
+call과 동일하나 두번째 인자들을 배열로 받아서 함수의 파라미터에 넣는다는 특징이 있음  
+어떤 함수의 파라미터로 리스트를 묶어서 전달할때 사용하기도 함(es6에서는 전개연산자)
+```javascript
+var func = function(a,b,c) {
+  console.log(this,a,b,c);
+} 
+
+func.apply({x:1}, [4,5,6]);
+```
+
+### bind
+call과 비슷하지만 즉시 호출하지는 않고 넘겨받은 this와 인수들을 바탕으로 새로운 함수를 반환한다  
+함수에 this를 미리 적용하는 것과 부분적용 함수를 구현하는 두가지 목적을 지님
+```javascript
+var func = function(a,b,c,d) {
+  console.log(this,a,b,c,d);
+}
+func(1,2,3,4) //window 
+
+var bindFunc1 = func.bind({x:1});
+bindFunc1(5,6,7,8) // this가 바뀐 새 함수를 할당
+```
+bind로 새로 만든 함수에는 name 프로퍼티에 bound 수동태가 붙는다(추적 용이)  
+
+### 상위 컨텍스트의 this 전달(let self = this 안하고)
+```javascript
+// call
+var obj = {
+  outer: function() {
+    console.log(this);
+    var innerFunc = function() {
+      console.log(this);
+    };
+    innerFunc.call(this);
+   }
+};
+obj.outer();
+
+//bind
+var obj = {
+  outer: function() {
+    console.log(this);
+    var innerFunc = function() {
+      console.log(this);
+    }.bind(this);
+    innerFunc();
+   }
+};
+obj.outer();
+
+```
+
+### 화살표 함수 예외
+실행 컨텍스트 생성 시 this를 바인딩하는 과정이 **제외된** 것이다  
+this가 아예 없는 것이고, 접근하고자 하면 스코프체인상 가장 가까운 this에 접근하게 됨
+```javascript
+var obj = {
+  outer: function() {
+    console.log(this);
+    var innerFunc = () => {
+      console.log(this);
+    };
+    innerFunc();
+  }
+}
+obj.outer();
+```
 
 ## Reference
 - [코어 자바스크립트 - this](http://www.yes24.com/Product/Goods/78586788?scode=032&OzSrank=1)
