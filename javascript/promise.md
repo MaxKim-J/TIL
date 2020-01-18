@@ -256,6 +256,39 @@ requestData1()
   // 로직로직
 });
 ```
+**MDN WEB DOCS 정리**  
+순회 가능한 객체에 주어진 모든 프로미스가 이행한 후, 혹은 프로미스가 주어지지 않았을 때 이행하는 Promise를 반환한다. 주어진 프로미스 중 하나가 거부하는 경우, 첫번째로 거절한 프로미스의 이유를 사용해 자신도 거부  
+
+이행된 프로미스를 반환하는 로직(함수) or 이행된 프로미스 모두 순회가능한 객체에 들어갈 수 있음  
+
+여러개의 비동기 작업들이 존재하고 이들이 모두 완료되었을 때 작업을 진행하고 싶다면 쓰는 api  
+```javascript
+//map이랑 사용한다고 할때 
+function wait(ms){
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function waitLog(item){
+  // 500ms 후에 resolve시키는 비동기로직
+  await wait(500);
+  return (`waitLog : ${item}`);
+}
+
+async function AsyncAwaitByForOfParallel() {
+  const arrays = [1, 2, 3];
+  // 500ms뒤에 resolve된 Promise 반환하는 로직에 인수 바인딩
+  const arrayPromises = arrays.map(this.waitLog);
+  // 프로미스 3개가 push된 배열이 Promise.all의 인자
+  await Promise.all(arrayPromises)
+    .then(([data1, data2, data3]) => {
+      console.log(data1);
+      console.log(data2);
+      console.log(data3);
+    });
+  // 비동기 로직 실행!
+  console.log('end');
+}
+```
 
 #### Pormise.race
 병렬로 처리된 여러개의 비동기로직 중 가장 먼저 처리된 것을 프로미스로 반환한다  
@@ -267,6 +300,7 @@ requestData1()
 - [자바스크립트로 만나는 세상 - 비동기 프로그래밍](https://helloworldjavascript.net/pages/285-async.html#fn_6)
 - [실전 리액트 프로그래밍 - 2.4 향상된 비동기 프로그래밍1:프로미스](http://www.yes24.com/Product/Goods/74223605?scode=032&OzSrank=1)
 - [자바스크립트 비동기 처리 과정과 RxJs Scheduler](http://sculove.github.io/blog/2018/01/18/javascriptflow/)
+- [async / await 최적화 방법 (병렬처리)](https://blog.woolta.com/categories/3/posts/138)
 
 
 
