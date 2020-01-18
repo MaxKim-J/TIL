@@ -3,7 +3,7 @@
 
 ## 앞으로의 계획
 - [x] 화살표 함수(0116)
-- [] async+await
+- [x] async+await (0117)
 - [x] let/const vs var(0117)
 - [] 비구조화 할당
 - [] 이터레이터, for
