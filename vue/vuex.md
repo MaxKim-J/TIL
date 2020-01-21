@@ -3,8 +3,10 @@
 드디어 배워보는 뷰엑스
 
 ## 구조
-[flux아키텍처](flux.md)의 메커니즘을 사용함
-![vuexstructure](../img/vuex.png)
+[flux아키텍처](flux.md)의 메커니즘을 사용함  
+
+![vuexstructure](../img/vuex.png)  
+
 액션(Actions), 변이(Mutations), 상태(State), 뷰 컴포넌트(Vue Componenent)  
 전체 흐름은 flux의 그것과 유사  
 
