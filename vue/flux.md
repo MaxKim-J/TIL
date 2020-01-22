@@ -59,5 +59,10 @@ MVC의 뷰와는 다르게 화면을 렌더링하는 역할 뿐 아니라, 컨�
 자식 뷰는 직접 스토어의 데이터를 받아오는 대신, 부모 뷰로부터 props를 사용해 데이터를 전달받음.  
 vue나 react 컴포넌트들이 수행하는 역할
 
+### 상태관리 맛집
+flux 아키텍쳐를 따르는 프론트엔드 상태관리 라이브러리
+1. [vuex](vuex.md)
+2. [redux](../react/redux.md)
+
 ## reference
 - [커피한잔 마시며 끝내는 Vue.js - Vuex](http://www.yes24.com/Product/Goods/76639545)
