@@ -1,6 +1,13 @@
 const path = require('path')
 const string = __filename;
 
+/* 
+헷갈릴까봐 정리
+
+절대경로 : 루트 폴더나 노드 프로세스가 실행되는 위치가 기준
+상대경로 : 현재 파일이 기준
+*/
+
 console.log("경로의 구분자:", path.sep)
 console.log("환경 변수의 구분자:", path.delimiter)
 console.log("파일이 위치한 폴더 경로:", path.dirname(string))
