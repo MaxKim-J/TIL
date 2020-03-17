@@ -58,8 +58,10 @@ console.log(Rectangle.isRectangle(rect1)); // true
   3. 클래스에 있는 값이 인스턴스의 동작에 영향을 계속 줌 : 클래스의 추상성을 해친다
   4. 진정한 "틀"일 수가 없다는 이야기 : 클래스에 있는 값들이 인스턴스의 동작에 영향을 준다 => 프로토타입 채이닝때문에 인스턴스 맴버변수 같은거에 접근해서 뭘 좀 수정하거나 삭제해도 `__proto__`를 타고넘어와서 다른 값을 찾아버린다녕
 - 해결방법
+
   1. 클래스가 구체적인 데이터를 지니지 않게 하면 되는데, 그럴려면 `Object.freeze(square.prototype)` 쓰면 댄다
   2. 빈 함수(bridge)를 이용하여 프로토타입 체이닝을 끊어버린다.
+
   ```javascript
   var Rectangle = function(width, height){
       this.width = width;
@@ -77,7 +79,9 @@ console.log(Rectangle.isRectangle(rect1)); // true
   Square.prototype = new Bridge();
   Object.freeze(Square.prototype);
   ```
+
   3. `Object.create`사용하기
+
   ```javascript
   Square.prototype = Object.create(Rectangle.prototype);
   ```
@@ -99,6 +103,7 @@ var g = new Grade(100, 80);
 2. Grade의 인스턴스는 여러개의 인자를 받아 각각 순서대로 인덱싱해서 저장하고, length프로퍼티가 존재하지만 배열은 아니고 유사배열객체라서 배열 메소드를 사용할 수 없다
 3. 인스턴스에서 배열 메소드를 직접 쓰게끔 하려면, `g.__proto__`가 배열의 인스턴스를 바라보게 하면 된다. 안바뀌었을 때는 object인데
 4. `Grade.prototype = [];`, 요 아래처럼 되서 배열의 `__proto__`를 채이닝해서 배열의 매소드에 접근할 수 있게 된다.
+   ![클래스](../img/class1.png)
 
 ## es6 클래스 문법
 
