@@ -95,8 +95,62 @@ const employee = {
 ```
 
 16. 짱짱 맵객체
+
 - 키 값 쌍이 자주 추가되거나 삭제되는 경우에 추천됨
 - 키가 문자열이 아닌 경우 추천됨 : 이건 객체의 키가 무조건 문자열만 되기 때문임
-```javascript
+- 맵 인스턴스에선 항상 메서드만을 사용하여 들어갔다 나왔다 함
+- delete() 메서드를 사용할 수 있기 때문에 인스턴스 생성한 후 언어 수준의 연산자를 섞지 않아도 되더라
+- clear() 메서드로 인해 다 비워버릴때는 객체 하나 엄하게 다시 안만들어도 됨
+- 모든 동작과 의도가 매우 명료하게 보인다는 점에서 객체보다 우위에 있다고 할 수 있음
+- 맵은 순서를 저장하고 있음, 배열의 경우처럼 정렬 메서드가 내장되어있지 않음
+- **?** 소트의 정확한 쓰임새를 알아야할듯,,,,
 
+```javascript
+// 맵객체 선언
+let filters = new Map();
+
+// 맵객체 set, 인수로 첫번째는 키, 두번째는 값
+filters.set("견종", "레브라도레트리버");
+
+// 맵객체 get, 인수로는 키만 전달
+filters.get("견종");
+
+// 이거랑
+let filters = new Map()
+  .set("견종", "레브라도리트리버")
+  .set("크기", "대형견")
+  .set("색상", "갈색");
+filters.get("크기");
+
+// 요거랑 같다
+let filters = new Map([
+  ["견종", "레브라도리트리버"],
+  ["크기", "대형견"],
+  ["색상", "갈색"]
+]);
+filters.get("색상");
+
+// 심지어 이터레이터이기도 함
+function checkFilters(filters) {
+  for (const entry of filters) {
+    console.log(entry);
+  }
+}
+
+// 맵에 있는 키-값을 쌍으로 묶은 맵이터레이터를 반환 [key, value]
+// object.entries로 추가되었음
+filter.entries();
+
+// map객체의 정렬
+function sortByKey(a, b) {
+  return a[0] > b[0] ? 1 : -1;
+}
+
+function getSortedAppliedFilters(filters) {
+  const applied = [];
+  for (const [key, value] of [...filters].sort(sortByKey)) {
+    applied.push(`${key}:${value}`);
+  }
+  return `선택한 조건은 ${applied.join(", ")} 입니다.`;
+}
 ```
