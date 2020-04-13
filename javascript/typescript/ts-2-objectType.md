@@ -162,6 +162,8 @@ let initVal = A.initValue // 1
 ### 타입 단언이 필요한 이유
 **이거에 대해서 포스팅해봐도 좋을 거 같음**
 **????이유를 알아내자 -  왜 자스의 객체와 타스의 정적타입 객체는 프로퍼티 구조가 다른가?** 
+
+여기서 object타입형은 객체를 뜻하면서 + 모든 객체를 아우르는 타입임 any다음 상위  
 ```ts
 let personTyped: object = {name:"jack", age:33}
 let personNonTyped = {name:"jack", age:33}
