@@ -24,11 +24,14 @@ Origin 'http://abc.ozit.co.kr' is therefore not allowed access.
 
 
 
-## 해결 방법(express)
+## 해결 방법
+
+### 서버측 해결 방법(정석)
+
 프론트 백이 분리되어있는 로직에서는 서버에서 크로스 오리진 요청을 허가해줘야 됨  
 서버에서 문제 해결하는게 정석이다  
 
-### Access-Control-Allow-Origin 응답 헤더 추가
+#### Access-Control-Allow-Origin 응답 헤더 추가
 ```js
 app.get('/data', (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -38,7 +41,7 @@ app.get('/data', (req, res) => {
 - 근데 모든 요청에 대해서 일일히 이렇게 해주기 귀찮을 수 있음  
 - 그리고 그냥 모든 곳에서 들어오는 api 요청을 다 허가해주는건 보안상으로 좋지 않음  
 
-### 미들웨어 CORS
+#### 미들웨어 CORS
 ```js
 const express = require('express');
 const cors = require('cors');
@@ -53,3 +56,13 @@ const corsOptions = {
 app.use(cors(corsOptions)); // config 추가
 ```
 
+### 클라이언트측 해결 방법
+
+#### 프록시 설정
+- 프록시 : 주로 보안의 문제로 직접 통신하지 못하는 두개의 컴퓨터 사이에서 서로 통신할 수 있도록 돕는 역할을 가리켜 프록시라 일컫는다
+- 프록시에서는 서버의 응답에 대해 리스폰스 헤더에 `access-contril-allow-origin` 헤더를 추가하여 클라이언트로 응답 보낸다
+- 웹팩 프록시 설정 : package.json의 프록시 설정에 요청을 보낼 url의 루트를 적어놓는다
+    - 그다음 모든 요청에서 루트를 삭제
+    - 이렇게 설정을 해놓으면 현재 개발서버의 주소로 요청을 먼저 보냄
+    - 웹팩 개발 서버에서 해당 요청을 받아 그대로 백엔드 서버로 전달
+    - 백엔드 서버에서 응답한 내용을 다시 브라우저 쪽으로 반환
