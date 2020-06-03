@@ -37,6 +37,7 @@ var xhr = new XMLHttpRequest();
 
 // readyState가 변경될때마다 호출되는 이벤트핸들러
 // 변경될 때마다 실행되니 각 state에 대응하는 동작을 지정해줘야한다
+// response가 클라이언트에게 도달하여 발생된 이벤트를 감지하고 콜백을 실행해줌, 이때 이벤트는 readystate가 변경될때 발생
 xhr.onreadystatechange = fucntion() {
   // 요청에 대한 콜백, 이 메서드는 이벤트 리스너로 요청한 후 서버로부터 응답이 올때 응답을 받을 수 있음
 
