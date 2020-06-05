@@ -9,90 +9,34 @@
 - 오래 걸리거나 서버와의 통신처럼 언제 끝날지 잘 모르겠는 작업들을 브라우저에 위임할 때 이루어짐
 - 요청이 많아졌을 때는? 요청이 100개 1000개 됐을 때 실행하고 기다리고 실행하고 기다리고... 시간 엄청 많이 걸림
 
-```javascript
-// #1
-console.log('Hello');
-// #2
-setTimeout(function() {
-	console.log('Bye');
-}, 3000);
-// #3
-console.log('Hello Again');
-```
-- web API인 setTimeout() 함수 : 코드를 바로 실행하지 않고 지정한 시간만큼 기다렸다가 로직을 실행
-- 그전에 `console.log('Hello Again')`은 미리 실행됨
-- 비동기 실행이 끝나고 난 후 바로 콜백함수 실행 가능
-
-### JS 엔진의 비동기 로직 처리 프로세스
-- 자바스크립트 엔진은 기본적으로 하나의 쓰레드에서 동작
-- 하나의 쓰레드를 가지고 있다는 것 = 하나의 스택 = 동시에 단 하나의 작업만을 할 수 있음
-- `web API`에서 비동기적으로 이벤트를 처리하거나, Ajax 통신을 하게 됨
-- `Event Loop`과 `Queue`를 이용해서 비동기 작업을 함
-
-#### 이벤트 루프와 큐
-이벤트 루프가 하는 일: 콜스택과 큐 사이의 작업들을 확인, 콜스택이 비워있는 경우 큐에서 작업을 꺼내서 콜스택에 넣는다.  
-자바스크립트 엔진이 하나의 코드 조각을 하나씩 처리할 수 있도록 작업을 스케쥴하는 동시에 + 비동기 처리도 함  
-
-#### 동기+비동기 로직 처리순서
-
-```javascript
-//1 - 콘솔로그
-console.log("script start");
-
-//2 - 셋타임아웃(비동기)
-setTimeout(function() {
-  console.log("setTimeout");
-}, 0);
-
-//3 - 프로미스(비동기)
-Promise.resolve().then(function() {
-  console.log("promise1");
-}).then(function() {
-  console.log("promise2");
-});
-
-//4 - 콘솔로그
-console.log("script end");
-```
-이 로직의 실행 결과는
-```javascript
-script start
-script end
-promise1
-promise2
-requestAnimationFrame
-setTimeout
-```
-**실제 처리 순서**
-1. 전역 컨텍스트 콜스택에 등록
-2. console.log('script start')
-3. 셋타임아웃 작업이 stack에 등록되고, web API에 setTimeout을 요청. 이때 셋타임아웃의 콜백 함수를 함께 전달. 요청 이후 stack의 settimeout은 제거
-4. web api는 setTimeOut의 작업이 완료되면 setTimeout callback함수를 task queue에 등록한다.
-5. 프로미스 작업이 stack에 등록되고 web api에 프로미스 작업 요청, 이때 then의 콜백 함수를 함께 전달, web api에서 프로미스 작업 완료되면 콜백함수를 큐에 등록
-6. console.log('script end')
-7. **스택이 비워져 있으니** 큐의 작업들 수행이 시작된다. 먼저 프로미스의 콜백함수가 실행되어 console.log("promise1")이 처리됨
-8. 첫번째 then 다음 then이 있다면 그 callback을 큐에 등록함 + 스택에서 첫번째 then 콜백 처리
-9. 두번째 then 콜백 스택에서 처리 + settimeout 스택에 등록
-10. 셋타임아웃의 콜백 처리 + 스택에서 지워짐
-
-#### 비동기 작업의 종류
-1. task 큐: 비동기 작업이 순차적으로 수행될 수 있도록 보장하는 형태의 작업 유형(setTimeout)
-2. Microtask 큐: 비동기 작업이 현재 실행되는 스크립트 바로 다음에 일어나는 작업. task보다 먼저 실행된다 (Promise)
-
-
 ### 콜백함수
-- 다른 함수의 인수로 넘기는 함수
+- 다른 함수의 인수로 넘기는 함수 => 그 코드는 함수를 필요에 따라 적절한 시점에 실행
 - 특정 비동기 로직 시행 후 바로 실행되는 로직
 - 데이터를 여러 방식으로 처리하려면 꼬리에 꼬리를 무는 콜백 함수...복잡 => 콜백 지옥
 - 자세한건 [#콜백함수]()에서 정리
+- 애당초에 콜백 패턴이 필요한 이유: **어떤 동작 이후에 동작시킬 함수를 계속 넘기기 위해서** 
+```js
+$.get('url', function(response) {
+	parseValue(response, function(id) {
+		auth(id, function(result) {
+			display(result, function(text) {
+				console.log(text);
+			});
+		});
+	});
+});
+```
 
 ## Promise
-콜백 함수의 문제를 해결하는 Promise Pattern  
-비동기 상태를 값으로 다룰 수 있는 객체  
-비동기 프로그래밍을 동기 프로그래밍 방식으로 코드 짜기 가능  
+- 이 값을 약속해줘!
+- 값은 현재의 값일수도, 혹은 미래의 값일수도(프로미스 안에서 resolve에 그냥 값 넣으면 그대로 나옴)
+- 즉 꼭 비동기 로직만을 promise에서 쓸 필요가 없다는 말임
+- 비동기 상태를 값으로 다룰 수 있는 객체
+- 비동기를 동기처럼 짤 수 있다
+- 콜백 패턴에 비해 가독성이 좋다 => then체이닝 때문에, 해당 비동기 요청이 끝나고 난 후의 로직을 직관적으로 명시할 수 있다.
+- 프로미스의 콜백이 비동기적으로 처리되는거임... 프로미스를 만나면 web api에서 resolve될때까지 기다렸다가 then으로 이어지는 콜백들 이벤트큐에 들어간것들 콜스택으로 옮겨 실행
 ```javascript
 // 비동기 로직 후 코드의 순차적 실행을 보장
-
 requestData1().then(data => {
   console.log(data);
   return requestData2();
@@ -125,6 +69,13 @@ const p3 = Promise.resolve(param);
   - 프로미스 생성할 때 프로미스가 아닌 인수 넣으면 그 인수를 가진 이행됨 프로미스가 반환됨
   - promise.resolve 함수에 프로미스가 입력되면 그 자신이 반환됨
 
+### 프로미스와 이벤트 루프
+실질적인 프로미스 처리는 어캐하는가?
+- 마이크로태스크라는걸 사용한다 : 일반 테스크보다 더 놓은 우선순위를 갖고 있는 태스크, 태스크 중에 대기중인 태스크가 있더라도 마이크로태스크가 먼저 실행된다
+- 프라미스의 then 메소드는 콜백을 태스크큐 대신 마이크로 태스크 큐에 추가해 놓음
+- 프라미스가 resolve 될때까지 기다렸다가 마이크로 태스크 큐의 콜백이 실행됨
+- **마이크로 태스크 큐가 비워저야 태스크 큐가 실행된다** 먼저 실행
+
 ### then
 처리됨 상태가 된 프로미스를 처리할 때 사용하는 메소드  
 프로미스가 처리됨 상태가 되면 then 메서드의 인수로 전달된 함수가 호출된다  
@@ -155,6 +106,7 @@ Promise.resolve(123).then(data => console.log(data));
 // 거부됨 상태인 프로미스 반환, 두번째 인자로 함수 받음
 Promise.reject('err').then(null, error => console.log(error));
 ```
+- 대충 흐름 : 프로미스 안에서 뭔가 비동기적으로 수행한후 값이 resolve되면 그걸 then이 인자로 받아서 처리해줌
 
 ### catch
 catch는 프로미스 수행 중 발생한 예외를 처히라는 메서드  
