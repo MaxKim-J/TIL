@@ -37,8 +37,11 @@
     ```html
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     ```
-
-- link : 주로 css 연결
+- link : 주로 css 연결, 정확히 말하면 현재문서와 외부 리소스의 관계를 명시, 사이트 아이콘 파비콘 등등
+```html
+<link href="main.css" rel="stylesheet">
+<link rel="icon" href="favicon.ico">
+```
 
 ## body
 - 브라우저에 주로 보이는 것들이 들어감
