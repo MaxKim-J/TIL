@@ -121,6 +121,156 @@ async function getData() {
   }
 }
 ```
+
+## 심화
+
+### 치환 가능
+async await는 promise then 체이닝으로 치환이 가능한 형태가 되는 편이며, 이벤트 루프를 막지 않는다, 근데 async awiat는 동기 코드가 막는것 처럼 보이기는 함
+```js
+let result;
+getData().then((data) => {
+  console.log("패치완료!", data)
+  result = data
+})
+
+const result = await getData();
+console.log("패치완료!",data)
+```
+
+### async await의 원리
+일단 처음엔 이렇게 생겼다
+```js
+
+function getDrink() {
+    return new Promise((resolve, reject) => {
+        resolve('orange juice')
+    })
+}
+
+async function fun() {
+    let drinks = await getDrink();
+    console.log(drinks) // orange juice
+}
+
+fun()
+```
+- 호출되는 함수 getDrink는 Promise 객체를 반환하고, 이 함수를 호출하는 부분에서는 async await 사용하여 함수 호출함
+- 동기적으로 보이지만 blocking되는건 아님
+- await는 async함수에서만 동기적으로 진행
+
+#### 제너레이터에 대한 이해
+- 단 한번의 실행으로 함수의 끝까지 실행이 완료되는 일반 함수와는 달리 제너레이터 함수는 사용자의 요구에 따라(Yiled와 next에 따라) 일시적으로 정지될 수도 있고 다시 시작될 수도 있다. 
+- 제너레이터 함수의 반환으로는 제너레이터가 반환
+- yield: 함수 실행 정지, 제너레이터의 콜러에게 반환
+- next로 인해 재개
+- 이터레이터가 값을 읽어오기위한 인터페이스라면, 제너레이터는 값을 쓰기 위한 인터페이스
+
+바벨에 넣어본거 결과
+```js
+let fun = (() => {
+    // 제너레이터 함수를 인자로 받아서 함수를 호출하는 함수
+    var _ref = _asyncToGenerator(function* () { 
+        // 그냥... yield로 done 상태 봐가면서 순차적으로 promise resolve가 실행될 수 있도록 하나보다
+        // yield되면 거기서 멈춤 => 제너레이터 next 될때까지 기다림
+        let drinks = yield getDrink();
+        console.log(drinks); // orange juice
+    });
+
+    // 고차함수 패턴 같기두
+    return function fun() { // 4. 실제 우리가 실행하게 될 함수
+    //  this바인딩 + arguemnts 넘겨서 함수 호출
+        return _ref.apply(this, arguments); 
+    };
+})(); // 즉시 실행
+
+function _asyncToGenerator(fn) { 
+    return function () { 
+        // fn은 프로미스를 yield하는 함수임, this 바인딩
+        // 제너레이터 함수에다가 this바인딩 한 친구
+        var gen = fn.apply(this, arguments); 
+
+        // 그리고 또 이 함수는 ㅅㅂ 프로미스를 리턴한다
+        return new Promise(function (resolve, reject) { 
+            function step(key, arg) { 
+                try { 
+                    // key로 호출해주는 이상한 인터페이스
+                    // Generator.next(arg) : 제너레이터에 값을 전달한다
+                    // 여기서는 yield된 프로미스를 전달 => 얘가 리졸브 될때까지 => 멈춤
+                    // next를 부른다, 왜 arg랑 같이 호출하지?
+
+                    // 넥스트 부르면 yiled된 프로미스 가져올것이고
+                    var info = gen[key](arg); 
+                    var value = info.value; 
+                } catch (error) { 
+                    reject(error); 
+                    return; 
+                } 
+
+                // 제너레이터가 끝났다면 젤큰 리턴 프로미스를 리졸브함
+                if (info.done) { resolve(value); } 
+
+                // 제너레이터가 끝나지 않았다면 순차적으로 일드된 프로미스를 리졸브하고 다음으로 넘어감
+                else { 
+                    // 프로미스 리졸브 파라미터로 프로미스를 넘길 수 있따(이행할 것)
+                    // 프로미스를 이행한 것을 리졸브하는 새로운 프로미스를 리턴하고, 다음 프로미스로 넘어감
+                    // 그럼 얘는 일단 끝난거
+                    return Promise.resolve(value).then(function (value) { 
+                        // 왜 value를 넘기지???
+                        step("next", value); // 9. 재귀적 호출
+                    }, function (err) { 
+                        step("throw", err); 
+                    }); 
+                } 
+            } 
+
+            // 제너레이터 돌리기 시작!!
+            return step("next"); 
+    }; 
+}
+
+function getDrink() {
+    return new Promise((resolve, reject) => {
+        resolve('orange juice');
+    });
+}
+
+fun();
+```
+
+**몇줄 요약** 
+
+- _asyncToGenerator : 이 함수를 호출하면서 인자로 generator을 전달한다(yield)
+- function* : 제너레이터 함수를 정의, 제너레이터 객체를 반환한다
+```js
+// yield 부르면 중지, next하면 다음으로 넘어가는데
+// 그 사이에 있는 로직들은 일단 계속 실행
+function* anotherGenerator(i) {
+  yield i + 1;
+  yield i + 2;
+  yield i + 3;
+}
+
+function* generator(i){
+  yield i;
+  yield* anotherGenerator(i);
+  yield i + 10;
+}
+
+var gen = generator(10);
+
+console.log(gen.next().value); // 10
+console.log(gen.next().value); // 11
+console.log(gen.next().value); // 12
+console.log(gen.next().value); // 13
+console.log(gen.next().value); // 20
+```
+- async는 제너레이터 funtion*으로 변경된다.
+- await은 yield로 변경된다
+- yield되는 얘들은 Promise 객체를 반환하는 함수, next메소드 사용해 다음거, 다음거, 넘어가서 리졸브
+
+### 한줄 요약
+async는 제너레이터 함수(function *), await은 promise를 리턴하는 yield로 바뀌어서, yield가 해결되는 순서 기준으로 함수가 처리됨. yield가 호출되면 제너레이터 함수는 잠시 정지되고, 해당 yield실행문이 리턴하는 promise가 resolve되야 다음 실행문으로 넘어감. (오류생기면 끗나고)
+
 ## reference
 - [실전 리액트 프로그래밍 - async,await](http://www.yes24.com/Product/Goods/74223605)
 - [캡틴판교 - 자바스크립트 async와 await](https://joshua1988.github.io/web-development/javascript/js-async-await/)
