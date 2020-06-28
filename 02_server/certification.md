@@ -55,6 +55,48 @@
 
 - vue 내비게이션 가드 : 라우팅 하기 전에 내비게이션 가드로 쿠키 저장소에 있는 토큰을 가져와서 접근 제어
 - axios intercept : 그 페이지 가만히 있다가 토큰이 만료되는 경우를 방지하기 위해, 이렇게 만료되는 경우에 Access Token을 자동으로 갱신하여 통신 요청을 넣어줘야 한다. => 사용자가 통신이 끊기는지 몰라야 함
+```js
+mport axios from 'axios';
+import VueCookies from 'vue-cookies';
+import { refreshToken } from '../service/login'
+
+axios.defaults.baseURL = 'http://localhost:3000';
+
+// Add a request interceptor
+axios.interceptors.request.use(async function (config) {
+    // Do something before request is sent
+    config.headers.token = VueCookies.get('token');
+    config.headers.refresh_token = VueCookies.get('refresh_token');
+  
+    console.log(config);
+    return config;
+  }, function (error) {
+    // Do something with request error
+    return Promise.reject(error);
+  });
+
+// Add a response interceptor
+axios.interceptors.response.use(function (response) {
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
+    return response;
+  }, async function (error) {
+    // Any status codes that falls outside the range of 2xx cause this function to trigger
+    // Do something with response error
+    console.log('에러일 경우', error.config);
+    const errorAPI = error.config;
+    if(error.response.data.status===401 && errorAPI.retry===undefined){
+      errorAPI.retry = true;
+      console.log('토큰이 이상한 오류일 경우');
+      await refreshToken();
+      return await axios(errorAPI);
+    }
+    return Promise.reject(error);
+  });
+
+
+export default axios;
+```
 
 ### 4. OAuth 2.0
 
