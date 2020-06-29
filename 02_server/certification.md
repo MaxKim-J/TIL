@@ -55,6 +55,7 @@
 
 - vue 내비게이션 가드 : 라우팅 하기 전에 내비게이션 가드로 쿠키 저장소에 있는 토큰을 가져와서 접근 제어
 - axios intercept : 그 페이지 가만히 있다가 토큰이 만료되는 경우를 방지하기 위해, 이렇게 만료되는 경우에 Access Token을 자동으로 갱신하여 통신 요청을 넣어줘야 한다. => 사용자가 통신이 끊기는지 몰라야 함
+
 ```js
 mport axios from 'axios';
 import VueCookies from 'vue-cookies';
@@ -85,6 +86,7 @@ axios.interceptors.response.use(function (response) {
     // Do something with response error
     console.log('에러일 경우', error.config);
     const errorAPI = error.config;
+    // unathorized error 예외처리 
     if(error.response.data.status===401 && errorAPI.retry===undefined){
       errorAPI.retry = true;
       console.log('토큰이 이상한 오류일 경우');
