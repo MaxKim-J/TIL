@@ -1,6 +1,5 @@
 # Vue에 CSS 바인딩
 
-
 ## 원칙
 
 - ""안에는 표현식
@@ -47,7 +46,13 @@
 ### 배열 구문 내에 객체 구문
 
 ```html
-<component :class="[{'classA' : Aapplied}, superClass]">
+<component :class="[{'classA' : Aapplied}, 'superClass']">
+```
+
+- 객체의 키값은 원래 걍 문자열이므로 클래스에 바인딩하는 객체 키값은 싱글 쿠오테이션 없어도 된다.
+
+```html
+<component :class="[{classA : Aapplied}, 'superClass']">
 ```
 
 ### 인라인 스타일 바인딩
