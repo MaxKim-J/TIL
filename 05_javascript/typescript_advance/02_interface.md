@@ -143,7 +143,7 @@ let user: IUser = {
 
 ```ts
 interface ICountries {
-  // 인터페이스에 value를???
+  // 인터페이스에 value를 => 얘는 무조건 이값이어야 함 타입이 아니라
   KR: '대한민국',
   US: '미국',
   CP: '중국'

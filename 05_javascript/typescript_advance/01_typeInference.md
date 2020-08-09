@@ -15,6 +15,25 @@
 - 기본값이 설정된 매개변수
 - 반환 값이 있는 함수
 
+### let과 const의 차이
+
+```ts
+let hello = 'world'   // string으로 추론
+const hello = 'world'   // 'word'로 추론
+let hello as const = 'world'
+
+const obj = {
+  hello: 'world' as const,
+  foo: 'bar'
+};
+```
+
+- let은 초기화된 값을 보고 타입을 추론한다
+- const는 그렇진 않고 그 값을 타입으로 삼아 추론한다
+- as const를 쓰면 let에서도 값을 타입으로 삼아 추론하도록 할 수 있다.
+- 주로 객체 프로퍼티의 타입 추론 범위를 좁혀주기 위해 const assertion을 사용한다
+- 리덕스 액션 타이핑에 쓰인다고 하는데 써본거 같은데 다시한번 복습해야할듯
+
 ## 타입 단언
 
 ### <>, as
