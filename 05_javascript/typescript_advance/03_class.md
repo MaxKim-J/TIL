@@ -100,7 +100,7 @@ console.log(cat.getName());
 console.log(cat.name); // Error : 외부에서 접근 못함, 메서드를 통해서만 접근
 ```
 
-- 생성자 메소드에서 인수 타입 선언과 동시에 접근 제어자를 사용하면 바로 속성 멤버로 정의 가능(갱장한 단축 문법,,)
+- **생성자 메소드에서 인수 타입 선언과 동시에 접근 제어자를 사용하면 바로 속성 멤버로 정의 가능(갱장한 단축 문법,,)**
 ```ts
 class Cat {
   constructor(public name: string, protected age: number) {}
@@ -117,7 +117,124 @@ class Cat {
 
 타입스크립트에도 이따,,,
 
-- 다른 클래스가 파생될 수 있는 기본 클래스, 인터페이스와 상당히 유사
-- 인터페이스는 모든 메소드가 추상 메소드이지만 추상 클래스는 하나 이상의 추상 메소드와 일반 메소드를 포함할 수 있다. 
+```ts
+abstract class Animal {
+  abstract name: string; // 파생된 클래스에서 구현해야 합니다.
+  abstract getName(): string; // 파생된 클래스에서 구현해야 합니다.
+}
 
-- 클래스를 타입선언에 사용하는건 머지
+class Cat extends Animal {
+  constructor(public name: string) {
+    super();
+  }
+  getName() {
+    return this.name;
+  }
+}
+new Animal(); // Error : 추상 클래스 만으로는 인스턴스를 만들 수 없다
+const cat = new Cat('Lucy');
+console.log(cat.getName()); // Lucy
+
+// Interface
+interface IAnimal {
+  name: string;
+  getName(): string;
+}
+
+// 클래스의 인터페이스
+class Dog implements IAnimal {
+  constructor(public name: string) {}
+  getName() {
+    return this.name;
+  }
+}
+```
+
+- 다른 클래스가 파생될 수 있는 기본 클래스, 인터페이스와 상당히 유사
+- 인터페이스는 모든 메소드가 추상 메소드이지만(구현을 기다리는 메소드랄까) 추상 클래스는 하나 이상의 추상 메소드와 일반 메소드를 포함할 수 있다.(구현을 해야하는 메소드와 이미 구현되어 있는 매소드가 섞여있어도 됨)
+- 추상 클래스는 직접 인스턴스를 생성할 수 없기 때문에 파생된 후손 클래스에서 인스턴스를 생성해야 함
+- 추상 클래스가 인터페이스와 다른 점은 속성이나 메소드 멤버에 대한 세부 구현이 가능하다는 점임
+
+## 데코레이터
+
+- 모든 데코레이터는 그냥 function이구 함수 이름 가져다 불러쓰면 된다
+- 클래스, 메소드, 프로퍼티, 파라미터에 적용할 수 있다
+- 실험적인 기능, tsconfig에서 추가할 수 있음
+
+### 이미 만들어진 클래스 프로퍼티에 "붙이는 거"
+
+```ts
+function fistDecorator(target, name) {
+  console.log('fistDecorator');
+}
+
+class Person {
+  @fistDecorator
+  job = 'programmer';
+}
+
+const p = new Person();
+console.log(p.job); // 콘솔 로그도 같이 실행됨
+```
+
+### 팩토리 패턴 데코레이터
+
+- 다양한 상황에서 사용할 수 있도록 파라미터를 전달해야 하는 데코레이터
+- 데코레이터는 클래스를 인스턴스화하기 위해 클래스를 호출하기 전에 (미리) 실행된다
+
+### 이외 특징
+
+- 데코레이터는 d.ts나 declare안에서는 사용할 수 없음 == 즉 전역으로 선언할 수 없음
+- 데코레이터 표현식은 런타임에 함수로서 호출됨
+
+### 클래스 데코레이터
+
+```ts
+function classDecorator<T extends {new(...args:any[]):{}}>(constructor:T) {
+  return class extends constructor {
+      newProperty = "new property";
+      hello = "override";
+  }
+}
+
+@classDecorator
+class Greeter {
+  property = "property";
+  hello: string;
+  constructor(m: string) {
+      this.hello = m;
+  }
+}
+
+```
+
+- 기존의 클래스 정의를 확장하는 용도
+- 클래스 데코레이터 함수의 인자로는 클래스가 전달됨. 클래스 데코레이터 함수에서는 새로운 클래스만을 반환하며 함수 이외의 값은 무시됨
+- **자신이 적용되는 클래스를 자체로 extends해서 새로운 프로퍼티를 추가하거나 기존의 프로퍼티에 오버라이드함**
+- 클래스에 필요한 의존성을 클래스의 constructor을 통해 주입하는 기능도 수행 가능
+
+```ts
+
+// 난해...
+
+const dependencyPool = {
+  dep1: {name: 'dep1'},
+  dep2: {name: 'dep2'},
+  dep3: {name: 'dep3'},
+  dep4: {name: 'dep4'},
+};
+
+function inject(...depNames) {
+  return function<T extends {new(...args: any[]): {}}> (constructor: T) {
+    return class extends constructor {
+      constructor(...args: any[]) {
+        const deps = depNames.reduce((deps, name) => ({
+          ...deps,
+          [name]: dependencyPool[name],
+        }), {});
+        super(deps);
+      }
+    }
+  }
+}
+```
