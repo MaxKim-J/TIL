@@ -66,7 +66,7 @@ function* mySaga() {
 - put: 실질적인 이펙트. 미들웨어에 의해 수행되는 명령을 담고있는 액션 객체
 - call이든 put이든 리턴값은 걍 뭐 객체다
 - takeEvery는 모오든 action dispatch를 관찰하고, takeLatest는 마지막으로 발생된 액션 dispatch의 응답만 캐치한다. 항상 마지막 버전의 데이터만 보여주어야 할때 유용한 것이다.
-- fork : 여러개의 saga들을 백그라운드에서 시작할 수 있는 이팩트
+- fork : 여러개의 saga들을 백그라운드에서 시작할 수 있는 이팩트. call은 블락되는데 반해 fork는 블락이 안된다. 태스크는 백그라운드에서 시작되고 이 태스크는 다음 태스크가 종료될때까지 기다리지 않고 플로우를 진행시킨다. 
 
 ## 테스트
 
@@ -145,3 +145,66 @@ call은 함수를 호출하고 리턴값은 이펙트에 대한 설명이다. �
 ### 이펙트의 추상화
 
 앞에서 말했듯 사가 내부에서 사이드 이펙트를 일으키는 것은 항상 서술적인 이펙트인 거시다. 물론 직접 할수도 있지만 test가 어려울 것이다. 사가가 실제로 한다고 천명할 수 있는 일은, **훌륭한 제어 흐름을 구현하기 위해 (사가 함수 안에서) 이러한 모든 이펙트들을 통합하는 것이다.** yield들을 차례차례 넣음으로써 yield된 이펙트의 순서를 지키는 것처럼....이거는 함수액션을 패치하게해주는 redux thunk보다 동작의 순수성을 보장할 수 있게 한다.
+
+## 심화개념
+
+### 액션 풀링
+
+**결론: 액션 take 전후에 뭔가 종단 관심사적인 로직이 필요한 경우 take를, 그냥 각 개별 제너레이터 함수에서 처리하고 싶으면 takeEvery나 takeLatest를 쓰는게 현명하다**
+
+takeEvery 헬퍼 이펙트는 로우레벨의 끝에 있는 강력한 이팩트. take를 감싸고 있는건데 take 이팩트를 사용해 rootSaga에서 풀링을 구현하면, 액션 감시 프로세스의 전체적인 제어를 가능하게 할 수 있다. 약간 프록시나 미들웨어처럼
+
+```js
+// takeEvery로 구현
+import { select, takeEvery } from 'redux-saga/effects'
+
+function* watchAndLog() {
+  yield takeEvery('*', function* logger(action) {
+    const state = yield select()
+
+    console.log('action', action)
+    console.log('state after', state)
+  })
+}
+
+// 풀링과 take로 구현
+import { select, take } from 'redux-saga/effects'
+
+function* watchAndLog() {
+  // 무한 next 호출이 가능한것이다
+  while (true) {
+    const action = yield take('*')
+    const state = yield select()
+
+    console.log('action', action)
+    console.log('state after', state)
+  }
+}
+```
+
+- white(true)가 약간 읭스러울 수 있는데, 제너레이터 함수 안에서의 무한루프에 대해 이해해야한다. 제너레이터는 완료를 향해 달려가는 run-to-completion 함수가 아니기 때문에 미들웨어의 루트사가가 한번 반복될때마다 액션이 일어나기를 쭉 기다린다. 
+- takeEvery의 경우에 실행된 태스크는 그들이 다시 실행될때의 관리 방법이 없다. 리소스가 정리되지 않은 부수효과다. 각각 매칭되는 액션에 실행되고 또 실행되지만, 언제 감시를 멈춰야 하는지 관리방법도 없고 걍 계속 감시한다.
+- take의 경우에는 컨트롤의 방향이 정반대다. 핸들러에 푸시되는 액션들 대신에 사가는 스스로 액션을 풀링한다. 
+
+```js
+import { take, put } from 'redux-saga/effects'
+
+function* watchFirstThreeTodosCreation() {
+  // 이렇게하면 action take를 딱 3번만! 반복한다. 3번만 액션을 관찰하는 것
+  for (let i = 0; i < 3; i++) {
+    const action = yield take('TODO_CREATED')
+  }
+  yield put({type: 'SHOW_CONGRATULATION'})
+}
+
+function* loginFlow() {
+  while (true) {
+    // take에 맞는 액션이 오지 않으면 next()가 호출되지 않으니 조건문 없이
+    // 이런 로직도 작성이 가능하다(제너레이터가 블로킹되는 상황을 이용)
+    yield take('LOGIN')
+    // ... perform the login logic
+    yield take('LOGOUT')
+    // ... perform the logout logic
+  }
+}
+```
