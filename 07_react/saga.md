@@ -1,5 +1,7 @@
 # Redux-Saga
 
+제너레이터 객체의 next()로 리턴받은 객체의 done값이 true가 될때까지, value에 프로미스 객체가 들어와 해당 객체를 이용해 then을 쓸 수 있을때까지 next()를 실행시키며 돌린다.
+
 ## 쓸모
 
 - 리액트/리덕스 애플리케이션의 사이드 이펙트, 데이터 패칭이나 브라우저 캐시에 접근하는 순수하지 않은 비동기 동작들을 더 쉽고 좋게 만드는 것을 목적으로 하는 라이브러리
@@ -66,7 +68,8 @@ function* mySaga() {
 - put: 실질적인 이펙트. 미들웨어에 의해 수행되는 명령을 담고있는 액션 객체
 - call이든 put이든 리턴값은 걍 뭐 객체다
 - takeEvery는 모오든 action dispatch를 관찰하고, takeLatest는 마지막으로 발생된 액션 dispatch의 응답만 캐치한다. 항상 마지막 버전의 데이터만 보여주어야 할때 유용한 것이다.
-- fork : 여러개의 saga들을 백그라운드에서 시작할 수 있는 이팩트. call은 블락되는데 반해 fork는 블락이 안된다. 태스크는 백그라운드에서 시작되고 이 태스크는 다음 태스크가 종료될때까지 기다리지 않고 플로우를 진행시킨다. 
+- fork : 여러개의 saga들을 백그라운드에서 시작할 수 있는 이팩트. yield를 사용해 블락으로만 작성할 수 있는 로직들 사이에서 논블락으로 동작하며 호출 즉시 제어권을 잃는다. call은 블락되는데 반해 fork는 블락이 안된다. 태스크는 백그라운드에서 시작되고 이 태스크는 다음 태스크가 종료될때까지 기다리지 않고 플로우를 진행시킨다. 사가 미들웨어 run을 했을때 비로소 실행된다.
+- select: 스토어에 접근할 수 있다.
 
 ## 테스트
 
@@ -150,7 +153,7 @@ call은 함수를 호출하고 리턴값은 이펙트에 대한 설명이다. �
 
 ### 액션 풀링
 
-**결론: 액션 take 전후에 뭔가 종단 관심사적인 로직이 필요한 경우 take를, 그냥 각 개별 제너레이터 함수에서 처리하고 싶으면 takeEvery나 takeLatest를 쓰는게 현명하다**
+**결론: 액션 take 전후에 뭔가 종단 관심사적인 로직이 필요한 경우 take를,아닌 경우에는 takeEvery나 takeLatest를 쓰는게 현명하다**
 
 takeEvery 헬퍼 이펙트는 로우레벨의 끝에 있는 강력한 이팩트. take를 감싸고 있는건데 take 이팩트를 사용해 rootSaga에서 풀링을 구현하면, 액션 감시 프로세스의 전체적인 제어를 가능하게 할 수 있다. 약간 프록시나 미들웨어처럼
 
@@ -185,6 +188,8 @@ function* watchAndLog() {
 - white(true)가 약간 읭스러울 수 있는데, 제너레이터 함수 안에서의 무한루프에 대해 이해해야한다. 제너레이터는 완료를 향해 달려가는 run-to-completion 함수가 아니기 때문에 미들웨어의 루트사가가 한번 반복될때마다 액션이 일어나기를 쭉 기다린다. 
 - takeEvery의 경우에 실행된 태스크는 그들이 다시 실행될때의 관리 방법이 없다. 리소스가 정리되지 않은 부수효과다. 각각 매칭되는 액션에 실행되고 또 실행되지만, 언제 감시를 멈춰야 하는지 관리방법도 없고 걍 계속 감시한다.
 - take의 경우에는 컨트롤의 방향이 정반대다. 핸들러에 푸시되는 액션들 대신에 사가는 스스로 액션을 풀링한다. 
+- 그러니까 **얼마나 액션을 보고 있을 것인지**를 코딩할 수 있는 것이다. 제너레이터의 연속된 동작들이 계속 반복될 거라는 말.
+- 이것도 머 당연하지만 제너레이터 함수는 next()로 진행시키기 때문에, 어떤 액션이 take되서 뭔가 블라킹하게 로직을 진행해서 next()가 몇번 호출되었다면 그 다음 로직을 수행하는 함수가 된다. 즉 제너레이터 로직이 다 종료될때까지 **액션이 발생할때마다 다른 함수로** 바뀐다(는 표현이 적절한지 모르겠네)
 
 ```js
 import { take, put } from 'redux-saga/effects'
@@ -199,12 +204,107 @@ function* watchFirstThreeTodosCreation() {
 
 function* loginFlow() {
   while (true) {
-    // take에 맞는 액션이 오지 않으면 next()가 호출되지 않으니 조건문 없이
-    // 이런 로직도 작성이 가능하다(제너레이터가 블로킹되는 상황을 이용)
+    // 이런 식으로 어떤 동작에 대한 플로우를 계속 짜버릴 수도 있다
     yield take('LOGIN')
-    // ... perform the login logic
+    // 로그인된 상태
+
+    // 그리고 이 상태까지 진행된 상태에서 로그아웃을 하는 것
     yield take('LOGOUT')
     // ... perform the logout logic
+  }
+}
+```
+
+### takeEvery, fork에 대해
+
+**결론: 일반 호출과 비교해서 call을 쓰는 이유는 반환값 때문이었고, fork를 쓰는 이유는 call이 generarator를 block하는 동작을 수행하기 때문이다.**
+
+takeEvery는 폴링을 구현한 추상화 단계가 높은 헬퍼함수이다. fork로 논블락킹하게 호출되므로 그냥 takeEvery만 여러개 두면 여러 액션을 take할수 있는 flowSaga함수가 만들어진다. 이벤트 리스너 심는것처럼..(concurrent action to be handled)
+
+```js
+function* takeEvery(pattern, saga, ...args) {
+  const task = yield fork(function* () {
+    while (true) {
+      const action = yield take(pattern)
+      yield fork(saga, ...args.concat(action))
+    }
+  })
+  return task
+}
+```
+
+fork는 call과 달리 논블로킹하게 함수를 실행하므로, next()이후에 fork를 만났다면 백그라운드에서 그걸 실행한 뒤, 일단 쌩가버리고 그 다음 next()호출로 넘어간다. 
+
+```js
+import { fork, call, take, put } from 'redux-saga/effects'
+import Api from '...'
+
+function* authorize(user, password) {
+  try {
+    const token = yield call(Api.authorize, user, password)
+    yield put({type: 'LOGIN_SUCCESS', token})
+    yield call(Api.storeItem, {token})
+  } catch(error) {
+    yield put({type: 'LOGIN_ERROR', error})
+  }
+}
+
+function* loginFlow() {
+  while (true) {
+    const {user, password} = yield take('LOGIN_REQUEST')
+    yield fork(authorize, user, password) // 서브루틴까지 실행한다 next는 쌩깐다
+    // 로그인 시도 중에 실행된 logout 액션도 관찰한다.
+    yield take(['LOGOUT', 'LOGIN_ERROR'])
+    // 얘의 호출은 멱등적이다. 저장된 토큰이 없다면 사실 아무것도 안할 것이다
+    // 다음 로그인을 기다리기전에 저장된 토큰을 지워서 저장소에 아무것도 없는 것을
+    // 보장해 주는것이다. 
+    yield call(Api.clearItem, 'token')
+    // 여기까지 수행되었다면 다시 처음으로 돌아가서 take를 진행할것임
+  }
+}
+```
+
+fork된 task는 cancel로 취소할 수 있다(오호)
+
+```js
+import { take, put, call, fork, cancel } from 'redux-saga/effects'
+
+// ...
+
+function* loginFlow() {
+  while (true) {
+    const {user, password} = yield take('LOGIN_REQUEST')
+    // fork는 태스크 오브젝트를 리턴한다. setInterval처럼...
+    const task = yield fork(authorize, user, password)
+    // 블락되니까 가능한 조건문 로직
+    const action = yield take(['LOGOUT', 'LOGIN_ERROR'])
+    if (action.type === 'LOGOUT')
+      yield cancel(task)
+    yield call(Api.clearItem, 'token')
+  }
+}
+```
+
+forking되는 제너레이터는 finally블락에서 cancel된 상황에 맞는 로직을 작성할 수 있다(오호오호)
+
+```js
+import { take, call, put, cancelled } from 'redux-saga/effects'
+import Api from '...'
+
+function* authorize(user, password) {
+  try {
+    const token = yield call(Api.authorize, user, password)
+    yield put({type: 'LOGIN_SUCCESS', token})
+    yield call(Api.storeItem, {token})
+    return token
+  } catch(error) {
+    yield put({type: 'LOGIN_ERROR', error})
+    // finally가 적절한 이유는 모든 종류의 완료에서 실행되는 로직이기 때문이다
+    // 무조건 보장
+  } finally {
+    if (yield cancelled()) {
+      // ... put special cancellation handling code here
+    }
   }
 }
 ```
