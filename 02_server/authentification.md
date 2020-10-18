@@ -49,6 +49,8 @@
 
 - 사용자가 로그인을 할때 AccessToken과 함께 그에 비해 긴 만료시간을 갖는 RefreshToken을 클라이언트에게 함께 발급.
 - 클라이언트는 AccessToken이 만료된 상황에서 RefreshToken을 이용해 AccessToken의 재발급 요청.
+- 여기서 서버에서 토큰을 발급해줄때 refreshToken과 accessToken은 확실히 구별되야함. refreshToken을 accessToken처럼 쓸 수 있다면 refreshToken이 의미가 없음. accessToken을 재발급 할때만 쓸 수 있어야 함. 
+- refreshToken이 털리면 어떡하지 - 안전한 곳에 저장 필요
 - RefreshToken이 만료되었다면 오류를 반환해 로그인을 요구
 - 장점 : 짧은 만료 기간을 사용할 수 있으므로 AccessToken이 탈취되더라도 제한된 기간만 접근이 가능, 사용자가 로그인을 자주 할 필요가 없음. 만료를 강제로 설정할 수 있음
 - 단점 : 클라이언트는 AccessToken의 만료에 대한 연장 요청 구현 필요. 인증 만료 기간의 자동 연장이 불가능함. 
