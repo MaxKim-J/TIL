@@ -79,8 +79,51 @@
 
 #### 로그인 세션 유지 전략
 
-- vue 내비게이션 가드 : 라우팅 하기 전에 내비게이션 가드로 쿠키 저장소에 있는 토큰을 가져와서 접근 제어
-- axios intercept : 그 페이지 가만히 있다가 토큰이 만료되는 경우를 방지하기 위해, 이렇게 만료되는 경우에 Access Token을 자동으로 갱신하여 통신 요청을 넣어줘야 한다. => 사용자가 통신이 끊기는지 몰라야 함
+##### 대충의 과정
+
+1. 클라이언트에서 accessToken으로 요청함 => 만료되지 않은 토큰이라면 응답 정상적으로 전송
+2. 만료된 토큰일 경우, 401이나 403반환(이때 요청한 엔드포인트를 기억하게끔 함) 
+3. 토큰 만료가 res에서 감지되었다면 클라이언트에서 쿠키 등에 저장된 refreshToken을 바탕으로 refresh 요청
+4. 서버에서 refresh 토큰 검증, 만료되었다면 refreshToken이 만료되었다는 에러응답을 발생(클라이언트에서는 로그인페이지로 리다이렉하도록 에러 핸들링)
+5. 성공적으로 재발급되었다면 새로운 accessToken을 브라우저에 저장한 후 아까 요청에서 저장해놨던 엔드포인트로 새로운 accessToken과 함께 재요청  
+6. 정상적으로 응답을 받음
+
+##### 구현에 사용할 수 있는 것들
+
+어딘가로 라우팅 하기 전에 내비게이션 가드로 쿠키에 있는 토큰을 가져오고 서버로 refreshToken 엔드포인트로 먼저 전송해서 만료 여부를 먼저 검증하여 새 토큰을 받아놓거나 현상 유지할 수 있음.(회사에서 쓰는 방법)
+
+```js
+export default async function ({ store, redirect }) {
+  const { isAuthenticated, token } = store.state.auth
+  let result
+  if (!isAuthenticated) {
+    try {
+      result = await store.dispatch('auth/refreshToken', token)
+    } catch (err) {
+      redirect('/auth/login')
+    }
+    if (!result) { redirect('/auth/login') }
+  }
+}
+
+```
+
+회사에서는 따로 refreshToken은 없고, accessToken만 뷰엑스 저장소에 저장해놔서 Nuxt 클라이언트 미들웨어를 통해 auth여부를 판단해야하는 라우팅 전에 먼저 accessToken을 가지고 refreshToken 엔드포인트로 보내서 유효한지 검증하고, 토큰과 관련된 유저 정보까지 받아서 뷰엑스 저장소에 갱신하고, 새로운 토큰은 쿠키에 저장함. 
+
+아마 refreshToken 엔드포인트 api요청으로 받는 토큰은 아직 유효하다면 그냥 토큰이 그대로 오고, 유효하지 않다면 갱신된 토큰을 받는..건 아니고 에러를 뿜는데 클라이언트에서는 핸들링을 통해 로그인으로 리다이렉 시켜서 다시 토큰을 받게하는 로직일듯 싶음. 이런 상황에서 토큰 발급은 로그인에서만 일어남.
+
+클라이언트단에서는 토큰 들어있는 쿠키의 만료시간을 설정해서 만료시간이 지나면 쿠키가 없으니까 로그인 페이지로 이동함. 확실히 교통정리가 안되있는거 같긴 하네 이래서 refreshToken도 필요한건가봄. 
+
+그러니까 이 방법은 클라이언트단에서 토큰 만료를 쿠키로 제어하고, refresh 요청은 (정확히는 모르겠지만 - 물어보자) 토큰을 기반으로 유저 정보를 가져오는데 의의가 있고, 이미 expire된 토큰에서는 작동하지 않고 에러를 뿜으니까 사실 진정한 의미에서 refreshToken을 하는 endpoint라고 보기는 힘들듯? getUserStatus정도지... RESTful하지 않ㄷ ㅏ.. 
+
+게다가 토큰이 이미 만료가 되었는데 클라이언트에서 가지고있어서 굳이 그거갖고 refresh해서 로그인 페이지로 리다이렉 하거나 토큰이 만료가 안되었는데도 클라이언트에서 없애버리는 상황이 발생할 수 있어 사실 일관이 있는 시스템은 아닌 거시다
+
+서버 컨트롤러에서는 같이 보낸 accessToken이 만료되었을 경우 refreshToken을 바탕으로 새로운 토큰을 발급하거나, refreshToken도 만료되었을 경우 로그인을 하도록 하는 에러를 뿜을 수 있음. 이때는 토큰 검증 로직에 토큰을 두개 태워서 보내는게 맞겟네
+
+- 구현이 가능하게 하는 것들
+  - **Vue 네비게이션 가드, 혹은 클라이언트 미들웨어** : 해당 라우터에 접속하기 전에 토큰 검증하여 재발급을 시키거나, refreshToken도 만료되었을때는 로그인 페이지로 보냄
+  - **React Router prop** : 라우트 컴포넌트에다가 auth 프롭을 달아두고, app.js 단이나 redux의 state를 이용해 현재 토큰을 보내서 토큰을 검증한 후 auth state를 초기화하여 prop으로 보내주고 그 값 기반으로 auth가 안되었다면 로그인으로 보내던지 함
+  - **아예 axios intercept 사용하기** : 라우팅 가드보다 좀더 low level한 방법으로, 그 페이지 가만히 있다가 토큰이 만료되는 경우를 방지하기 위해, 이렇게 만료되는 경우에 Access Token을 자동으로 갱신하여 통신 요청을 넣어줘야 한다. => 사용자가 통신이 끊기는지 모르게 하게끔
 
 ```js
 mport axios from 'axios';
@@ -112,7 +155,8 @@ axios.interceptors.response.use(function (response) {
     // Do something with response error
     console.log('에러일 경우', error.config);
     const errorAPI = error.config;
-    // unathorized error 예외처리 
+    // 토큰이 만료된 경우에는 401또는 403에러 정도가 올텐데
+    // 그럴때 자동으로 refresh 토큰을 하고 해당 api를 재요청한다.
     if(error.response.data.status===401 && errorAPI.retry===undefined){
       errorAPI.retry = true;
       console.log('토큰이 이상한 오류일 경우');
