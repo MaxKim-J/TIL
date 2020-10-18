@@ -191,6 +191,23 @@ passport의 initialize, session 메소드는 위에서 코딩했던 것과 똑�
 - initialize: 초기화 작업
 - session : 세션 정보를 req._passport에 넣는다
 
+전반적으로 passport의 작동방식은
+
+**app 진입점**
+
+- app.use(passport.initialize()) : 구동
+- app.use(passport.session()) : 세션 연결
+
+**strategy**
+
+- passport.use(new Strategy({}, (username, password, done))) : 전략과 인자 정의
+- passport.serializeUser
+- passport.deserilaizeUser
+
+**controller**
+
+- router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), (req, res) => {}); : 컨트롤러에 미들웨어 연결
+
 ### 전략
 
 - 공통의 인증 로직은 passport가 담당하고 구체적인 방법은 전략이라는 개념으로 분리해 놓았음.
