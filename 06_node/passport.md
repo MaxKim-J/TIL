@@ -252,6 +252,7 @@ passport.use(
 
 ### JWT strategy
 
+- 세션을 사용하지 않아도 된다
 
 ## reference
 
