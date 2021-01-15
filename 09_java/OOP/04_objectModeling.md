@@ -271,3 +271,12 @@ for (int i = 0;i < 2;++i) {
 pot.liveAnotherDay();
 System.out.printf("pot alive? %s", pot.isAlive());
 ```
+
+- bottle에 갔던 메소드들 다시 spary로 복구 => 난 그냥 스프레이에서 분사하고 싶을 뿐이라서
+- waterSpray가 head와 bottle의 연산을 알아서 처리할 수 있도록
+
+```java
+public void spray() {
+  this.head.sprayFrom(body);
+}
+```
