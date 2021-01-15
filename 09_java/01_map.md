@@ -19,6 +19,7 @@
 
 ```java
 // 키와 value의 타입
+import java.util.HashMap;
 
 HashMap<String,String> map6 = new HashMap<String,String>(){{//초기값 지정
     put("a","b");
@@ -128,6 +129,7 @@ for(Integer i : map.keySet()){ //저장된 key값 확인
 - HashMap과는 다르게 선언시 크기 지정이 안된다.
 
 ```java
+import java.util.TreeMap;
 // TreeMap생성
 TreeMap<Integer,String> map1 = new TreeMap<Integer,String>();
 // new에서 타입 파라미터 생략가능
