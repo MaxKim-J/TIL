@@ -153,7 +153,7 @@ Person person = new Student("leon", "kim");
 
 // 1. Person 객체가 실제로는 Teacher인지 확인해야하고
 // 2. 실제로 Teacher면 캐스팅함
-Teacher teacher = (Teacher) person;]
+Teacher teacher = (Teacher) person;
 
 // 특정 클래스의 인스턴스인지 여부를 판단하는 instanceof
 System.out.println(person instanceof Student);
@@ -161,6 +161,7 @@ System.out.println(person instanceof Teacher);
 ```
 
 ```java
+// 부모 자식간의 캐스팅은 가능하다
 Person person0 = new Student("Leon", "kim");
 Person person1 = new Teacher("Pope", "kim", Department.COMPUTER_SCIENCE);
 
@@ -176,5 +177,18 @@ if(person1 instanceof Teacher) {
 }
 ```
 
-- 그런데 instanceof 연산자는 반드시 특정 클래스의 인스턴스 인지를 보여주는것은 아님. 손주를 사용한다면 부모 클래스로 검사해도 무조건 true가 됨 딱 맞는건 아님
+- 그런데 instanceof 연산자는 반드시 특정 클래스의 인스턴스 인지를 보여주는것은 아님. 손주가 부모 클래스의 인스턴스냐고 검사해도 무조건 true가 됨 딱 맞는건 아님
 
+## Object 클래스
+
+```java
+FullTimeTeacher teacher = new FullTimeTeacher ("lulu", "choi". Department.MAGIC)
+teacher.getClass().getName()  // 패키지.클래스명 나옴
+```
+
+- RTTI : 캡슐화된 무언가의 안을 들여다볼 수 있는 기능들
+- getClass() : 실행 중에 개체의 클래스 정보를 얻어올 수 있음
+- 반환된 개체에는 여러 유용한 메서드가 들어있음
+- 약간 디버깅용
+- 인스턴스에서 작성하지도 않았는데 어디서 온 메서드인가? => 내 클래셍 없어도 메서드를 사용할 수 있는 경우가 있는데 => 상속
+- Object 클래스 : 모든 클래스는 Object클래스를 상속함 toString, getClass 등등
