@@ -7,8 +7,8 @@
 
 - [x] AWS 기본 지식
 - [x] EC2
-- [ ] Security Group
-- [ ] Elastic IP
+- [x] Security Group
+- [x] Elastic IP
 - [ ] AMI
 - [ ] CloudWatch
 - [ ] S3
@@ -22,6 +22,7 @@
 - [ ] VPC
 - [ ] CloudFormation
 - [ ] Elastic Beanstalk
+- [ ] Lambda
 - [ ] CI/CD
 - [ ] IaC - terraform
 - [ ] docker - 쓸일이 있을지..?
