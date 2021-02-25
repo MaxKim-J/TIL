@@ -9,10 +9,10 @@
 - [x] EC2
 - [x] Security Group
 - [x] Elastic IP
-- [ ] AMI
+- [x] AMI
 - [ ] CloudWatch
-- [ ] S3
-- [ ] CloudFront
+- [x] S3
+- [x] CloudFront
 - [ ] RDS
 - [ ] DynamoDB
 - [ ] ElastiCache
