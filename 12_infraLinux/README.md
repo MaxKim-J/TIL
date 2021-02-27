@@ -10,15 +10,15 @@
 - [x] Security Group
 - [x] Elastic IP
 - [x] AMI
-- [ ] CloudWatch
+- [z] CloudWatch
 - [x] S3
 - [x] CloudFront
 - [ ] RDS
 - [ ] DynamoDB
 - [ ] ElastiCache
-- [ ] IAM
-- [ ] Route 53
-- [ ] Elastic LoadBalancer
+- [x] IAM
+- [x] Route 53
+- [x] Elastic LoadBalancer
 - [ ] VPC
 - [ ] CloudFormation
 - [ ] Elastic Beanstalk
