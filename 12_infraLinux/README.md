@@ -10,7 +10,7 @@
 - [x] Security Group
 - [x] Elastic IP
 - [x] AMI
-- [z] CloudWatch
+- [x] CloudWatch
 - [x] S3
 - [x] CloudFront
 - [ ] RDS
@@ -22,11 +22,11 @@
 - [ ] VPC
 - [ ] CloudFormation
 - [ ] Elastic Beanstalk
-- [ ] Lambda
+- [ ] Lambda - 서버리스 아키텍처부터 시작해서 좀 더 딮하게 정리
 - [ ] CI/CD
 - [ ] IaC - terraform
 - [ ] docker - 쓸일이 있을지..?
-- [ ] kubernetes - 쓸일이 있을지..?
+- [ ] kubernetes - 이건 정말로 쓸일이 있을지..?
 
 ## 레퍼런스
 
