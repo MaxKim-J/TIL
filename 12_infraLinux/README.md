@@ -19,7 +19,7 @@
 - [x] IAM
 - [x] Route 53
 - [x] Elastic LoadBalancer
-- [ ] VPC
+- [x] VPC
 - [ ] CloudFormation
 - [ ] Elastic Beanstalk
 - [ ] Lambda - 서버리스 아키텍처부터 시작해서 좀 더 딮하게 정리
